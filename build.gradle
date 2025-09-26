@@ -1,10 +1,12 @@
 plugins {
     id 'java'
+    id 'maven-publish'
     id("xyz.jpenilla.run-paper") version "2.3.1"
 }
 
-group = 'xyz.leafing'
+group = 'com.github.Roberta001'
 version = '1.0-SNAPSHOT'
+archivesBaseName = 'MiniGameManager'
 
 repositories {
     mavenCentral()
@@ -51,5 +53,17 @@ processResources {
     filteringCharset 'UTF-8'
     filesMatching('plugin.yml') {
         expand props
+    }
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = project.group
+            artifactId = project.archivesBaseName // Artifact ID 就是项目名
+            version = project.version
+
+            from components.java
+        }
     }
 }
