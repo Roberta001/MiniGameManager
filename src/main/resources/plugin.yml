@@ -1,0 +1,4 @@
+name: MiniGameManager
+version: '1.0-SNAPSHOT'
+main: xyz.leafing.miniGameManager.MiniGameManager
+api-version: '1.21'
