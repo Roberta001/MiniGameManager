@@ -1,6 +1,7 @@
 package xyz.leafing.miniGameManager.implementation;
 
 import org.bukkit.GameMode;
+// import org.bukkit.attribute.Attribute; // 不再需要这个导入
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -34,7 +35,7 @@ public class PlayerDataManager {
 
         data.set("inventory.main", player.getInventory().getContents());
         data.set("inventory.armor", player.getInventory().getArmorContents());
-        data.set("inventory.extra", player.getInventory().getExtraContents()); // For 1.9+ off-hand
+        data.set("inventory.extra", player.getInventory().getExtraContents());
         data.set("enderchest", player.getEnderChest().getContents());
         data.set("stats.health", player.getHealth());
         data.set("stats.food", player.getFoodLevel());
@@ -72,16 +73,28 @@ public class PlayerDataManager {
             player.getInventory().setExtraContents(loadItemStackArray(data, "inventory.extra"));
             player.getEnderChest().setContents(loadItemStackArray(data, "enderchest"));
 
-            player.setHealth(data.getDouble("stats.health", 20.0));
+            // --- START OF FIX (Compatibility Version) ---
+            // 获取保存的生命值
+            double savedHealth = data.getDouble("stats.health", 20.0);
+            // 使用兼容性方法获取玩家当前的最大生命值
+            double maxHealth = player.getMaxHealth();
+            // 设置生命值，确保不超过当前最大值
+            player.setHealth(Math.min(savedHealth, maxHealth));
+            // --- END OF FIX ---
+
             player.setFoodLevel(data.getInt("stats.food", 20));
             player.setSaturation((float) data.getDouble("stats.saturation", 5.0));
             player.setLevel(data.getInt("exp.level", 0));
             player.setExp((float) data.getDouble("exp.progress", 0.0));
             player.setGameMode(GameMode.valueOf(data.getString("gamemode", "SURVIVAL")));
 
-            Collection<PotionEffect> effects = (Collection<PotionEffect>) data.get("potioneffects");
-            if (effects != null) {
-                player.addPotionEffects(effects);
+            if (data.isList("potioneffects")) {
+                List<?> rawEffects = data.getList("potioneffects");
+                for (Object obj : rawEffects) {
+                    if (obj instanceof PotionEffect) {
+                        player.addPotionEffect((PotionEffect) obj);
+                    }
+                }
             }
 
             player.setAllowFlight(data.getBoolean("allow-flight", false));
@@ -111,7 +124,10 @@ public class PlayerDataManager {
             player.removePotionEffect(effect.getType());
         }
 
-        player.setHealth(20.0);
+        // 重置血量时也应使用兼容性方法
+        double maxHealth = player.getMaxHealth();
+        player.setHealth(maxHealth);
+
         player.setFoodLevel(20);
         player.setSaturation(5.0f);
         player.setLevel(0);
