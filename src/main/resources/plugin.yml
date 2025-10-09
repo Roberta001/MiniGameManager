@@ -1,4 +1,10 @@
 name: MiniGameManager
-version: '1.0-SNAPSHOT'
+version: '2.1.0-SNAPSHOT'
 main: xyz.leafing.miniGameManager.MiniGameManager
 api-version: '1.21'
+depend: [NBTAPI]
+commands:
+  mgm:
+    description: Main command for MiniGameManager debugging.
+    usage: /<command> [args]
+    aliases: [minigamemanager]

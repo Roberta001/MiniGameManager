@@ -4,8 +4,8 @@ plugins {
     id("xyz.jpenilla.run-paper") version "2.3.1"
 }
 
-group = 'com.github.Roberta001'
-version = '1.0.1-SNAPSHOT'
+group = 'xyz.leafing' // 你的包名
+version = '2.1.0-SNAPSHOT'
 archivesBaseName = 'MiniGameManager'
 
 repositories {
@@ -14,17 +14,21 @@ repositories {
         name = "papermc-repo"
         url = "https://repo.papermc.io/repository/maven-public/"
     }
+    // 添加 NBT API 的仓库
+    maven {
+        name = "codemc-repo"
+        url = "https://repo.codemc.io/repository/maven-public/"
+    }
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:1.21.8-R0.1-SNAPSHOT")
+    compileOnly("io.papermc.paper:paper-api:1.21-R0.1-SNAPSHOT")
+    // 添加 NBT API 依赖
+    compileOnly("de.tr7zw:item-nbt-api-plugin:2.12.2")
 }
 
 tasks {
     runServer {
-        // Configure the Minecraft version for our task.
-        // This is the only required configuration besides applying the plugin.
-        // Your plugin's jar (or shadowJar if present) will be used automatically.
         minecraftVersion("1.21")
     }
 }
