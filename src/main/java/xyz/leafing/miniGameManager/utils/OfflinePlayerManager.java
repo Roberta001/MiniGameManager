@@ -149,7 +149,18 @@ public class OfflinePlayerManager {
     }
 
     public boolean setGameModeNBT(UUID uuid, GameMode gameMode) {
-        return performSafeOperation(uuid, nbt -> nbt.setInteger("playerGameType", gameMode.getValue()));
+        return performSafeOperation(uuid, nbt -> {
+            int gameModeValue = gameMode.getValue();
+
+            // **--- FIX START ---**
+            // 1. 设置原版 Minecraft 的标签
+            nbt.setInteger("playerGameType", gameModeValue);
+
+            // 2. 设置 Bukkit/Spigot/Paper 的标签
+            NBTCompound bukkitCompound = nbt.getOrCreateCompound("bukkit");
+            bukkitCompound.setInteger("playerGameMode", gameModeValue);
+            // **--- FIX END ---**
+        });
     }
 
     public boolean teleportNBT(UUID uuid, Location location) {
