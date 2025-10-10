@@ -29,16 +29,16 @@ public class MiniGameServiceImpl implements MiniGameAPI {
         this.offlineManager = offlineManager;
     }
 
-    // --- 现有方法保持不变 ---
     @Override
     public boolean enterGame(Player player, JavaPlugin sourcePlugin) {
         return playersInGame.putIfAbsent(player.getUniqueId(), sourcePlugin) == null;
     }
 
     @Override
-    public boolean leaveGame(Player player, JavaPlugin sourcePlugin) {
-        if (sourcePlugin.equals(playersInGame.get(player.getUniqueId()))) {
-            playersInGame.remove(player.getUniqueId());
+    public boolean leaveGame(UUID playerUUID, JavaPlugin sourcePlugin) {
+        // 直接使用 UUID 进行判断和移除
+        if (sourcePlugin.equals(playersInGame.get(playerUUID))) {
+            playersInGame.remove(playerUUID);
             return true;
         }
         return false;
@@ -69,8 +69,6 @@ public class MiniGameServiceImpl implements MiniGameAPI {
         dataManager.clearData(player);
     }
 
-    // --- 修改和新增的方法 ---
-
     @Override
     public CompletableFuture<Boolean> restorePlayerData(UUID playerUUID) {
         if (!hasPendingData(playerUUID)) {
@@ -79,16 +77,14 @@ public class MiniGameServiceImpl implements MiniGameAPI {
 
         Player onlinePlayer = Bukkit.getPlayer(playerUUID);
         if (onlinePlayer != null && onlinePlayer.isOnline()) {
-            // 玩家在线，直接在主线程恢复
             return CompletableFuture.supplyAsync(() -> dataManager.restoreData(onlinePlayer), runnable -> Bukkit.getScheduler().runTask(plugin, runnable));
         } else {
-            // 玩家离线，异步进行NBT操作
             return CompletableFuture.supplyAsync(() -> {
                 Optional<PlayerDataSnapshot> snapshotOpt = dataManager.loadSnapshot(playerUUID);
                 if (snapshotOpt.isPresent()) {
                     boolean success = offlineManager.restorePlayerDataNBT(playerUUID, snapshotOpt.get());
                     if (success) {
-                        dataManager.deleteDataFile(playerUUID); // 成功后删除yml文件
+                        dataManager.deleteDataFile(playerUUID);
                     }
                     return success;
                 }
@@ -101,11 +97,9 @@ public class MiniGameServiceImpl implements MiniGameAPI {
     public CompletableFuture<Boolean> setGameMode(UUID playerUUID, GameMode gameMode) {
         Player onlinePlayer = Bukkit.getPlayer(playerUUID);
         if (onlinePlayer != null && onlinePlayer.isOnline()) {
-            // 玩家在线，在主线程操作
             Bukkit.getScheduler().runTask(plugin, () -> onlinePlayer.setGameMode(gameMode));
             return CompletableFuture.completedFuture(true);
         } else {
-            // 玩家离线，异步进行NBT操作
             return CompletableFuture.supplyAsync(() -> offlineManager.setGameModeNBT(playerUUID, gameMode));
         }
     }
@@ -114,22 +108,19 @@ public class MiniGameServiceImpl implements MiniGameAPI {
     public CompletableFuture<Boolean> teleport(UUID playerUUID, Location location) {
         Player onlinePlayer = Bukkit.getPlayer(playerUUID);
         if (onlinePlayer != null && onlinePlayer.isOnline()) {
-            // 玩家在线，在主线程操作
             return CompletableFuture.supplyAsync(() -> onlinePlayer.teleport(location), runnable -> Bukkit.getScheduler().runTask(plugin, runnable));
         } else {
-            // 玩家离线，异步进行NBT操作
             return CompletableFuture.supplyAsync(() -> offlineManager.teleportNBT(playerUUID, location));
         }
     }
+
     @Override
     public CompletableFuture<Boolean> clearFullPlayerData(UUID playerUUID) {
         Player onlinePlayer = Bukkit.getPlayer(playerUUID);
         if (onlinePlayer != null && onlinePlayer.isOnline()) {
-            // 玩家在线，在主线程操作
             Bukkit.getScheduler().runTask(plugin, () -> dataManager.clearFullData(onlinePlayer));
             return CompletableFuture.completedFuture(true);
         } else {
-            // 玩家离线，异步进行NBT操作
             return CompletableFuture.supplyAsync(() -> offlineManager.clearFullDataNBT(playerUUID));
         }
     }

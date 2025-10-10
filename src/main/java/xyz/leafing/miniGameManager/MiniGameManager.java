@@ -15,22 +15,20 @@ public final class MiniGameManager extends JavaPlugin {
     private MiniGameAPI api;
     private OfflinePlayerManager offlinePlayerManager;
 
+    // 在 MiniGameManager.java 中
     @Override
     public void onEnable() {
         getLogger().info("MiniGameManager 正在启动...");
 
-        // 检查依赖
         if (getServer().getPluginManager().getPlugin("NBTAPI") == null) {
             getLogger().severe("未找到依赖 NBTAPI！插件将禁用。");
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
 
-        // 1. 初始化核心组件
         this.offlinePlayerManager = new OfflinePlayerManager(this);
         this.api = new MiniGameServiceImpl(this, offlinePlayerManager);
 
-        // 2. 注册 API 服务
         getServer().getServicesManager().register(
                 MiniGameAPI.class,
                 api,
@@ -38,10 +36,11 @@ public final class MiniGameManager extends JavaPlugin {
                 ServicePriority.Normal
         );
 
-        // 3. 注册监听器
-        getServer().getPluginManager().registerEvents(new PlayerConnectionListener(this, offlinePlayerManager), this);
+        // **--- 修改此处 ---**
+        // 将 api 实例传递给监听器的构造函数
+        getServer().getPluginManager().registerEvents(new PlayerConnectionListener(this, api, offlinePlayerManager), this);
+        // **--- 修改结束 ---**
 
-        // 4. 注册命令
         Objects.requireNonNull(getCommand("mgm")).setExecutor(new MGMCommand(api, this));
 
         getLogger().info("MiniGameManager 服务已成功加载并向服务器注册！");
