@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'xyz.leafing' // 你的包名
-version = '2.1.0-SNAPSHOT'
+version = '2.1.1-SNAPSHOT'
 archivesBaseName = 'MiniGameManager'
 
 repositories {
