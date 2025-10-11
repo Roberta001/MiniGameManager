@@ -165,6 +165,7 @@ public class OfflinePlayerManager {
 
     public boolean teleportNBT(UUID uuid, Location location) {
         return performSafeOperation(uuid, nbt -> {
+            // 1. 更新坐标和朝向
             var pos = nbt.getDoubleList("Pos");
             pos.clear();
             pos.add(location.getX());
@@ -176,7 +177,13 @@ public class OfflinePlayerManager {
             rotation.add(location.getYaw());
             rotation.add(location.getPitch());
 
+            // 2. 更新维度名称
             nbt.setString("Dimension", location.getWorld().getKey().toString());
+
+            // 3. **关键修复**: 更新维度的UUID
+            UUID worldUUID = location.getWorld().getUID();
+            nbt.setLong("WorldUUIDMost", worldUUID.getMostSignificantBits());
+            nbt.setLong("WorldUUIDLeast", worldUUID.getLeastSignificantBits());
         });
     }
 
